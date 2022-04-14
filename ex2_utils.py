@@ -10,8 +10,14 @@ def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     :param k_size: 1-D array as a kernel
     :return: The convolved array
     """
+    k_len = len(k_size)
+    in_signal = np.pad(in_signal, (k_len - 1, k_len - 1), 'constant')
+    sig_len = len(in_signal)
+    signal_conv = np.zeros(sig_len - k_len + 1)
+    for i in range(sig_len - k_len + 1):
+        signal_conv[i] = (in_signal[i:i + k_len] * k_size).sum()
+    return signal_conv
 
-    return
 
 
 def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
