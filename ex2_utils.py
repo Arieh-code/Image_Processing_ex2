@@ -97,6 +97,11 @@ def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
     return cv2.filter2D(in_image, -1, kernel, borderType=cv2.BORDER_REPLICATE)
 
 
+# laplacian kernal
+# One of the two
+laplacian_ker = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+
+
 def edgeDetectionZeroCrossingSimple(img: np.ndarray) -> np.ndarray:
     """
     Detecting edges using "ZeroCrossing" method
@@ -104,7 +109,20 @@ def edgeDetectionZeroCrossingSimple(img: np.ndarray) -> np.ndarray:
     :return: opencv solution, my implementation
     """
 
-    return
+    img = conv2D(img, laplacian_ker)
+    zero_crossing = np.zeros(img.shape)
+    for i in range(img.shape[0] - (laplacian_ker.shape[0] - 1)):
+        for j in range(img.shape[1] - (laplacian_ker.shape[1] - 1)):
+            if img[i][j] == 0:
+                if (img[i][j - 1] < 0 and img[i][j + 1] > 0) or \
+                        (img[i][j - 1] < 0 and img[i][j + 1] < 0) or \
+                        (img[i - 1][j] < 0 and img[i + 1][j] > 0) or \
+                        (img[i - 1][j] > 0 and img[i + 1][j] < 0):  # All his neighbors
+                    zero_crossing[i][j] = 255
+            if img[i][j] < 0:
+                if (img[i][j - 1] > 0) or (img[i][j + 1] > 0) or (img[i - 1][j] > 0) or (img[i + 1][j] > 0):
+                    zero_crossing[i][j] = 255
+    return zero_crossing
 
 
 def edgeDetectionZeroCrossingLOG(img: np.ndarray) -> np.ndarray:
@@ -114,7 +132,8 @@ def edgeDetectionZeroCrossingLOG(img: np.ndarray) -> np.ndarray:
     :return: opencv solution, my implementation
     """
 
-    return
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    return edgeDetectionZeroCrossingSimple(img)
 
 
 def houghCircle(img: np.ndarray, min_radius: int, max_radius: int) -> list:
