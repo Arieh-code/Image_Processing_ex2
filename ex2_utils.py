@@ -68,7 +68,19 @@ def blurImage1(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :return: The Blurred image
     """
 
-    return
+    assert (k_size % 2 == 1)
+    sigma = 0.3 * ((k_size - 1) * 0.5 - 1) + 0.8
+    return conv2D(in_image, create_gaussian(k_size, sigma))
+
+
+def create_gaussian(size, sigma):
+    mid = size // 2
+    kernel = np.zeros((size, size))
+    for i in range(size):
+        for j in range(size):
+            x, y = i - mid, j - mid
+            kernel[i, j] = np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2)) / (2 * np.pi * sigma ** 2)
+    return kernel
 
 
 def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
@@ -79,7 +91,10 @@ def blurImage2(in_image: np.ndarray, k_size: int) -> np.ndarray:
     :return: The Blurred image
     """
 
-    return
+    assert (k_size % 2 == 1)
+    sigma = int(round(0.3 * ((k_size - 1) * 0.5 - 1) + 0.8))
+    kernel = cv2.getGaussianKernel(k_size, sigma)
+    return cv2.filter2D(in_image, -1, kernel, borderType=cv2.BORDER_REPLICATE)
 
 
 def edgeDetectionZeroCrossingSimple(img: np.ndarray) -> np.ndarray:
