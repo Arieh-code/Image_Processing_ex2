@@ -19,7 +19,6 @@ def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     return signal_conv
 
 
-
 def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     """
     Convolve a 2-D array with a given kernel
@@ -28,7 +27,15 @@ def conv2D(in_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     :return: The convolved image
     """
 
-    return
+    kernel = np.flip(kernel)
+    img_h, img_w = in_image.shape
+    ker_h, ker_w = kernel.shape
+    image_padded = np.pad(in_image, (ker_h // 2, ker_w // 2), 'edge')
+    output = np.zeros((img_h, img_w))
+    for y in range(img_h):
+        for x in range(img_w):
+            output[y, x] = (image_padded[y:y + ker_h, x:x + ker_w] * kernel).sum()
+    return output
 
 
 def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
@@ -38,7 +45,19 @@ def convDerivative(in_image: np.ndarray) -> (np.ndarray, np.ndarray):
     :return: (directions, magnitude)
     """
 
-    return
+    Gx = np.array([[0, 0, 0], [-1, 0, 1], [0, 0, 0]])
+    Gy = Gx.transpose()
+
+    x_der = conv2D(in_image, Gx)
+    y_der = conv2D(in_image, Gy)
+
+    directions = np.rad2deg(np.arctan2(y_der, x_der))
+    # directions[directions < 0] += 180
+
+    magnitude = np.sqrt(np.square(x_der) + np.square(y_der))
+    # magnitude = magnitude * 255.0 / magnitude.max()
+
+    return directions, magnitude
 
 
 def blurImage1(in_image: np.ndarray, k_size: int) -> np.ndarray:
