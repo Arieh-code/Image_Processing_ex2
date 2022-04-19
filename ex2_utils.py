@@ -147,7 +147,45 @@ def houghCircle(img: np.ndarray, min_radius: int, max_radius: int) -> list:
                 [(x,y,radius),(x,y,radius),...]
     """
 
-    return
+    cannyImage = cv2.Canny((img * 255).astype(np.uint8), 100, 200)
+
+    rows, cols = cannyImage.shape
+    edges = []
+    points = []
+    circlesResult = []
+    helpCircles = {}
+    ths = 0.47  # at least 0.47% of the pixels of a circle must be detected
+    steps = 100
+
+    for r in range(min_radius, max_radius + 1):
+        for s in range(steps):
+            angle = 2 * math.pi * s / steps
+            x = int(r * math.cos(angle))
+            y = int(r * math.sin(angle))
+            points.append((x, y, r))
+
+    for i in range(rows):
+        for j in range(cols):
+            if cannyImage[i, j] == 255:
+                edges.append((i, j))
+
+    for e1, e2 in edges:
+        for d1, d2, r in points:
+            a = e2 - d2
+            b = e1 - d1
+            s = helpCircles.get((a, b, r))
+            if s is None:
+                s = 0
+            helpCircles[(a, b, r)] = s + 1
+
+    sortedCircles = sorted(helpCircles.items(), key=lambda i: -i[1])
+    for circle, s in sortedCircles:
+        x, y, r = circle
+        if s / steps >= ths and all((x - xc) ** 2 + (y - yc) ** 2 > rc ** 2 for xc, yc, rc in circlesResult):
+            print(s / steps, x, y, r)
+            circlesResult.append((x, y, r))
+
+    return circlesResult
 
 
 def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: float, sigma_space: float) -> (
