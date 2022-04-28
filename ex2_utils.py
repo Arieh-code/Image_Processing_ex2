@@ -3,6 +3,15 @@ import numpy as np
 import cv2
 
 
+def myID() -> np.int:
+    """
+    Return my ID (not the friend's ID I copied from)
+    :return: int
+    """
+
+    return 315074963
+
+
 def conv1D(in_signal: np.ndarray, k_size: np.ndarray) -> np.ndarray:
     """
     Convolve a 1-D array with a given kernel
@@ -234,4 +243,4 @@ def vec_gaussian(img: np.ndarray, variance: float) -> np.ndarray:
 
 def get_slice(img: np.ndarray, x: int, y: int, kernel_size: int) -> np.ndarray:
     half = kernel_size // 2
-    return img[x - half : x + half + 1, y - half : y + half + 1]
+    return img[x - half: x + half + 1, y - half: y + half + 1]
