@@ -207,40 +207,33 @@ def bilateral_filter_implement(in_image: np.ndarray, k_size: int, sigma_color: f
     :return: OpenCV implementation, my implementation
     """
 
-    img2 = np.zeros(in_image.shape)
-    gaussKer = get_gauss_kernel(k_size, sigma_color)
-    sizeX, sizeY = in_image.shape
-    for i in range(k_size // 2, sizeX - k_size // 2):
-        for j in range(k_size // 2, sizeY - k_size // 2):
-            imgS = get_slice(in_image, i, j, k_size)
-            imgI = imgS - imgS[k_size // 2, k_size // 2]
-            imgIG = vec_gaussian(imgI, sigma_space)
-            weights = np.multiply(gaussKer, imgIG)
-            vals = np.multiply(imgS, weights)
-            val = np.sum(vals) / np.sum(weights)
-            img2[i, j] = val
-    cv_bilateral = cv2.bilateralFilter(in_image, k_size, sigma_color, sigma_space)
-    return cv_bilateral, img2
+    filter_img = np.zeros_like(in_image)
+    filter_cv = cv2.bilateralFilter(in_image, k_size, sigma_space, sigma_color)
+
+    k_size = int(k_size / 2)
+
+    in_image = cv2.copyMakeBorder(in_image, k_size, k_size, k_size, k_size,
+                                  cv2.BORDER_REPLICATE, None, value=0)
+    for y in range(k_size, in_image.shape[0] - k_size):
+        for x in range(k_size, in_image.shape[1] - k_size):
+            # next few lines is the official formula given in class
+            pivot_v = in_image[y, x]
+            neighbor_hood = in_image[
+                            y - k_size:y + k_size + 1,
+                            x - k_size:x + k_size + 1
+                            ]
+            delta = neighbor_hood.astype(int) - pivot_v
+            diff_gaus = np.exp(-np.power(delta, 2) / (2 * sigma_space))
+            get_gaus = cv2.getGaussianKernel(2 * k_size + 1, sigma=sigma_color)
+            get_gaus = get_gaus.dot(get_gaus.T)
+            gaus_combo = get_gaus * diff_gaus
+
+            final_sum = ((gaus_combo * neighbor_hood / gaus_combo.sum()).sum())
+
+            filter_img[y - k_size, x - k_size] = round(final_sum)
+    return filter_cv, filter_img
 
 
-def get_gauss_kernel(kernel_size: int, spatial_variance: float) -> np.ndarray:
-    # Creates a gaussian kernel of given dimension.
-    arr = np.zeros((kernel_size, kernel_size))
-    for i in range(0, kernel_size):
-        for j in range(0, kernel_size):
-            arr[i, j] = math.sqrt(
-                abs(i - kernel_size // 2) ** 2 + abs(j - kernel_size // 2) ** 2
-            )
-    return vec_gaussian(arr, spatial_variance)
 
 
-def vec_gaussian(img: np.ndarray, variance: float) -> np.ndarray:
-    # For applying gaussian function for each element in matrix.
-    sigma = math.sqrt(variance)
-    cons = 1 / (sigma * math.sqrt(2 * math.pi))
-    return cons * np.exp(-((img / sigma) ** 2) * 0.5)
 
-
-def get_slice(img: np.ndarray, x: int, y: int, kernel_size: int) -> np.ndarray:
-    half = kernel_size // 2
-    return img[x - half: x + half + 1, y - half: y + half + 1]
